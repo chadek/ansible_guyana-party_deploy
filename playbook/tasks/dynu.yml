@@ -1,0 +1,29 @@
+- name: Dynu | Download dynu client
+  get_url:
+    url: https://www.dynu.com/support/downloadfile/31
+    dest: "{{ temp_folder }}/mktemp"
+
+- name: Dynu | Install dynu client
+  shell: dpkg -i "{{ temp_folder }}/mktemp"
+  become: true
+
+- name: Dynu | Remove install file
+  file:
+    path: "{{ temp_folder }}/mktemp"
+    state: absent
+
+- name: Dynu | Copy dynuiuc.conf
+  template:
+    src: ./files/dynuiuc.j2
+    dest: /etc/dynuiuc/dynuiuc.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  become: true
+
+- name: Dynu | Start dynuiuc service and enabled
+  service:
+    name: dynuiuc
+    state: started
+    enabled: yes
+  become: true

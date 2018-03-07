@@ -1,0 +1,69 @@
+- name: check if git folder exist
+  stat:
+    path: ~/guyana-party
+  register: git_check
+
+- name: Get guyana-party from git
+  git:
+    repo: 'https://github.com/chadek/guyana-party'
+    dest: ~/guyana-party
+  when: git_check.stat.isdir is not defined
+
+# - name: Load npm modules
+#   shell:
+#     path: /home/couac/guyana-party
+#   become: true
+
+- name: npm | Load guyana-party modules
+  shell: npm install
+  args:
+    chdir: ~/guyana-party/
+
+- name: npm | Install pm2
+  npm:
+    name: pm2
+    global: yes
+  become: true
+
+- name: npm | Load guyana-party modules
+  shell: npm install
+  args:
+    chdir: ~/guyana-party/
+
+- name: pm2 | Check if pm2 service already exist
+  service:
+    name: pm2-{{ ansible_user_id }}
+    state: started
+  register: check_pm2
+  ignore_errors: yes
+
+
+- name: Create pm2 service | Start guyana-party process 
+  shell: pm2 start ~/guyana-party/bin/www
+  when: check_pm2.failed
+  ignore_errors: yes
+
+# - name: pm2 | Create pm2 startup service for guyana-party
+#   shell: pm2 startup | tail -n 1 > pm2.sh && chmod +x pm2.sh && ./pm2.sh && rm pm2.sh
+#   when: check_pm2.failed
+
+- name: Create pm2 service | get pm2 startup command
+  shell: pm2 startup | tail -n 1 > pm2.sh
+  when: check_pm2.failed
+
+- name: Create pm2 service | change pm2.sh right
+  file:
+    path: ~/pm2.sh
+    mode: 0755
+  when: check_pm2.failed
+
+- name: Create pm2 service | run pm2.sh
+  shell: ./pm2.sh
+  when: check_pm2.failed
+  become: true
+
+- name: Create pm2 service | remove pm2.sh
+  file:
+    path: ~/pm2.sh
+    state: absent
+  when: check_pm2.failed

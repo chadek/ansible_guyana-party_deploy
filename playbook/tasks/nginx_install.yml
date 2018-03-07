@@ -1,0 +1,46 @@
+- name: Nginx | Make sure apache2 isn't running (prevent Nginx installation)
+  service:
+    name: apache2
+    state: stopped
+  become: true
+
+- name: Nginx | Check if Nginx present
+  package:
+    name: nginx
+    state: present
+  check_mode: true
+  register: nginx_check
+
+- name: Nginx | Install Nginx
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+  become: true
+
+- name: Nginx | ufw allow Nginx Full
+  ufw:
+    rule: allow
+    name: Nginx Full
+  become: true
+  when: nginx_check.changed
+
+- name: Nginx | Backup nginx sites-available\default to default.orig
+  shell: mv /etc/nginx/sites-available/default /etc/nginx/sites-available/default.orig
+  become: true
+  when: nginx_check.changed
+
+- name: Nginx | Copy nginx conf for certbot init to sites-available
+  template:
+    src: ./files/nginx_cerbot_init.j2
+    dest: /etc/nginx/sites-available/default
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  become: true
+
+- name: Nginx | Restart nginx service
+  service:
+    name: nginx
+    state: restarted
+  become: true

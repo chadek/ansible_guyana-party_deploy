@@ -1,0 +1,13 @@
+- name: Update repositories
+  apt:
+    update_cache: yes
+    # name: *
+    # state: latest
+  become: true
+
+- name: Install git
+  apt:
+    name: git
+    state: present
+    update_cache: yes
+  become: true

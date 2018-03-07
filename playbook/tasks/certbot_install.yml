@@ -1,0 +1,32 @@
+- name: Certbot | Create repository to resolve letsencrypt challenge
+  file:
+    path: /var/www/letsencrypt/.well-known/acme-challenge/
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: 0775
+    recurse: yes
+  become: true
+
+- name: Certbot | Add certbot repository
+  apt_repository:
+    repo: 'ppa:certbot/certbot'
+    update_cache: yes
+  become: true
+
+- name: Cerbot | Install Certbot's nginx package
+  apt:
+    name: python-certbot-nginx
+    state: present
+  become: true
+
+- name: Certbot | Check if certificate already exists
+  stat:
+    path: /etc/letsencrypt/live/{{ domain_name }}/cert.pem
+  register: letsencrypt_cert
+  become: true
+
+- name: Certbot | Generate new certificate if one doesn't exist
+  shell: "certbot --nginx --noninteractive --agree-tos --email {{ cerbot_email }} -d {{ domain_name }} > /home/vm/cerbot.log"
+  when: not letsencrypt_cert.stat.exists
+  become: true

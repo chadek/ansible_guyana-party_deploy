@@ -1,0 +1,38 @@
+---
+  - hosts:
+    # declare your own hosts (from hosts file)
+    # - serveur-node
+    # - node-vm
+    vars:
+      temp_folder: /tmp
+
+      # Var for dynuiuc conf (uncomment with your own credentials)
+      # username: username
+      # password: password
+      ipv4: true
+      ipv6: false
+      pollinterval: 120
+
+      # Var for nginx conf
+      domain_name: guyana-party.dynu.net
+      nodejs_port: 3000
+      cerbot_email: meyer.fabrice@gmx.fr
+
+    tasks:
+
+    # Install prerequisites
+    - import_tasks: tasks/prerequisites.yml
+    # Install Dynu client
+    - import_tasks: tasks/dynu.yml
+    # Install MongoDB
+    - import_tasks: tasks/mongod.yml
+    # Install Node.js
+    - import_tasks: tasks/node.yml
+    # Install Nginx
+    - import_tasks: tasks/nginx_install.yml
+    # Install Certbot to generate ssl cert and key
+    - import_tasks: tasks/certbot_install.yml
+    # Install Nginx
+    - import_tasks: tasks/nginx_load_ssl.yml
+    # Get source and load npm modules
+    - import_tasks: tasks/init_guayana-party.yml

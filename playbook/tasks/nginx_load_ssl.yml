@@ -1,0 +1,44 @@
+- name: Nginx | Copy conf snippet pointing to ssl key and cert
+  template:
+    src: ./files/ssl-letsencrypt.j2
+    dest: /etc/nginx/snippets/ssl-letsencrypt.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  become: true
+
+- name: Nginx | Copy conf snippet with strong ssl settings
+  template:
+    src: ./files/ssl-params.j2
+    dest: /etc/nginx/snippets/ssl-params.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  become: true
+
+- name: Nginx | Copy nginx conf to sites-available
+  template:
+    src: ./files/nginx.j2
+    dest: /etc/nginx/sites-available/default
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  become: true
+
+
+- name: Nginx | Check if Diffie-Hellman group already exists
+  stat:
+    path: /etc/ssl/certs/dhparam.pem
+  register: letsencrypt_cert
+  become: true
+
+- name: Nginx | Generate a strong Diffie-Hellman group if doesn't exist (may take a few minutes)
+  shell: openssl dhparam -out /etc/ssl/certs/dhparam.pem 4096
+  become: true
+  when: not letsencrypt_cert.stat.exists
+
+- name: Nginx | End of nginx conf, restart nginx service
+  service:
+    name: nginx
+    state: restarted
+  become: true
