@@ -1,0 +1,23 @@
+---
+  - hosts:
+    #- serveur-node
+    - node-vm
+    vars:
+      temp_folder: /tmp
+
+
+
+      domain_name_node: guyana-party.dynu.net
+      nodejs_port: 3000
+
+
+    tasks:
+
+    # # Install prerequisites
+    - import_tasks: tasks/prerequisites.yml
+    # # Install MongoDB
+    - import_tasks: tasks/mongod.yml
+    # # Install Node.js
+    - import_tasks: tasks/node.yml
+    # Get source and load npm modules
+    - import_tasks: tasks/init_guayana-party.yml
